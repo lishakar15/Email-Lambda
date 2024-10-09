@@ -16,7 +16,7 @@ public class EmailLambda implements RequestHandler<SQSEvent, Void> {
         for (SQSEvent.SQSMessage message : event.getRecords()) {
             try {
                 JSONObject jsonObject = new JSONObject(message.getBody());
-                JSONArray emails = jsonObject.getJSONArray("emails");
+                JSONArray emails = jsonObject.getJSONArray("emailList");
                 String subject = jsonObject.getString("subject");
                 String body = jsonObject.getString("body");
                 for (int i = 0; i < emails.length(); i++) {
@@ -24,7 +24,7 @@ public class EmailLambda implements RequestHandler<SQSEvent, Void> {
                 }
                 System.out.println("Processed message: " + message.getMessageId());
             } catch (Exception e) {
-                System.err.println("Error processing message: " + message.getMessageId() + ", " + e.getMessage());
+                System.err.println("Error processing message: " + message.getMessageId() + ", " + e);
             }
         }
         return null;
@@ -32,10 +32,11 @@ public class EmailLambda implements RequestHandler<SQSEvent, Void> {
 
 
     private void sendEmail(String recipient, String subject, String body) {
+        String bodyWithThanks = body + "\n\nThanks and Regards,\nLishakar";
         SendEmailRequest request = new SendEmailRequest()
             .withDestination(new Destination().withToAddresses(recipient))
             .withMessage(new Message()
-                .withBody(new Body().withText(new Content().withCharset("UTF-8").withData(body)))
+                .withBody(new Body().withText(new Content().withCharset("UTF-8").withData(bodyWithThanks)))
                 .withSubject(new Content().withCharset("UTF-8").withData(subject)))
             .withSource("lishakarj@gmail.com");
         sesClient.sendEmail(request);
